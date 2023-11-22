@@ -2,6 +2,7 @@
 const roomSelectionContainer = document.getElementById('room-selection-container')
 const roomInput = document.getElementById('room-input')
 const connectButton = document.getElementById('connect-button')
+const endCall = document.getElementById('end-call-button')
 
 const videoChatContainer = document.getElementById('video-chat-container')
 const localVideoComponent = document.getElementById('local-video')
@@ -40,6 +41,10 @@ connectButton.addEventListener('click', () => {
   joinRoom(roomInput.value)
 })
 
+endCall.addEventListener('click', () => {
+  endCallHandler();
+});
+
 // SOCKET EVENT CALLBACKS =====================================================
 socket.on('room_created', async () => {
   console.log('Socket event callback: room_created')
@@ -47,6 +52,11 @@ socket.on('room_created', async () => {
   await setLocalStream(mediaConstraints)
   isRoomCreator = true
 })
+
+socket.on('end_call', () => {
+  console.log('Socket event callback: end_call');
+  endCallHandler();
+});
 
 socket.on('room_joined', async () => {
   console.log('Socket event callback: room_joined')
@@ -122,9 +132,43 @@ function joinRoom(room) {
   }
 }
 
+function endCallHandler() {
+  if (rtcPeerConnection) {
+    // Close the peer connection
+    console.log("Connection closed!")
+    rtcPeerConnection.close();
+    rtcPeerConnection = null;
+  }
+
+  // Stop the local stream tracks
+  if (localStream) {
+    localStream.getTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+
+  // Stop recording if it's in progress
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+
+  // Reset video elements
+  localVideoComponent.srcObject = null;
+  remoteVideoComponent.srcObject = null;
+
+  // Hide video chat container and show room selection container
+  videoChatContainer.style = 'display: none';
+  roomSelectionContainer.style = "display: block; max-width: 25rem; background-color: #333";
+  endCall.style = 'display: none';
+
+  // Emit an event to signal the end of the call
+  socket.emit('end_call', roomId);
+}
+
 function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
   videoChatContainer.style = 'display: block'
+  endCall.style = 'display: block'
 }
 
 async function setLocalStream(mediaConstraints) {
@@ -162,30 +206,39 @@ function startRecordingLocalAudio(stream) {
 
   function startNewRecording() {
     mediaRecorder = new MediaRecorder(new MediaStream([audioTrack]));
-
+  
     mediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         recordedAudioChunks.push(event.data);
       }
     };
-
+  
     mediaRecorder.onstop = () => {
-      const recordedAudioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' });
-      socket.emit('recorded_audio', { recordedAudioBlob, roomId });
-
-      // Reset the recorded audio chunks array
-      recordedAudioChunks = [];
-
-      // Start a new recording after 5 seconds
-      setTimeout(startNewRecording, 5000);
+      if (mediaRecorder.state === 'inactive') {
+        const recordedAudioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' });
+        socket.emit('recorded_audio', { recordedAudioBlob, roomId });
+  
+        // Reset the recorded audio chunks array
+        recordedAudioChunks = [];
+  
+        // Start a new recording after 5 seconds
+        setTimeout(startNewRecording, 5000);
+      }
     };
-
-    mediaRecorder.start();
-
-    // Stop recording after 5 seconds (configurable)
-    setTimeout(() => {
-      mediaRecorder.stop();
-    }, 5000);
+  
+    // Start recording only if the MediaRecorder is in the 'inactive' state
+    if (mediaRecorder.state === 'inactive') {
+      try {
+        mediaRecorder.start();
+  
+        // Stop recording after 5 seconds (configurable)
+        setTimeout(() => {
+          mediaRecorder.stop();
+        }, 5000);
+      } catch (error) {
+        console.log('Call ended!');
+      }
+    }
   }
 
   // Start the first recording

@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebRTC</title>
 
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+
     <style type="text/css">
       body {
         margin: 0;
         font-size: 20px;
+        background: url('assets/images/peakpx.jpg') center center fixed;
+        background-size: cover;
       }
 
       .centered {
@@ -16,6 +24,7 @@
         top: 40%;
         left: 50%;
         transform: translate(-50%, -50%);
+        text-align: center; /* Center text in smaller screens */
       }
 
       .video-position {
@@ -42,23 +51,86 @@
         height: 100%;
         width: 100%;
       }
+
+      .card-container {
+        max-width: 30rem;
+        background-color: #333;
+      }
+
+      .card-body-container {
+        color: white;
+      }
+
+      .card-title-container {
+        margin-top: 5%;
+      }
+
+      .card-text-container {
+        margin-top: 5%;
+      }
+
+      .form-input-container {
+        margin-top: 5%;
+      }
+
+      .connect-button-container {
+        margin-top: 5%;
+        display: inline-block;
+
+      }
+
+      /* Mobile responsiveness */
+      @media screen and (max-width: 768px) {
+        body {
+          font-size: 16px; /* Adjust font size for smaller screens */
+        }
+
+        .centered,
+        .video-position {
+          top: 50%;
+        }
+
+        #local-video {
+          height: 50%;
+          width: 50%;
+        }
+
+        .connect-button-container {
+          font-size: 16px;
+        }
+      }
     </style>
   </head>
 
   <body>
-    <div id="room-selection-container" class="centered">
-      <h1>WebRTC video conference</h1>
-      <label>Enter the number of the room you want to connect</label>
-      <input id="room-input" type="text" />
-      <button id="connect-button">CONNECT</button>
+    <div class="card centered mx-auto card-container" id="room-selection-container">
+      <div class="card-body text-white card-body-container">
+        <h1 class="card-title card-title-container">WebRTC video conference</h1>
+        <label class="card-text card-text-container"
+          >Enter the number of the room you want to connect</label
+        >
+        <input id="room-input" type="text" class="form-control form-input-container" />
+        <button id="connect-button" class="btn btn-primary connect-button-container">
+          CONNECT
+        </button>
+      </div>
     </div>
-    <a id="download-link" style="display: none;"></a>
+    <a id="download-link" style="display: none"></a>
     <div id="video-chat-container" class="video-position" style="display: none">
-      <video id="local-video" autoplay="autoplay" muted="muted"></video>
+      <video id="local-video" autoplay="autoplay" muted="muted" style="display: none"></video>
       <video id="remote-video" autoplay="autoplay"></video>
     </div>
+    <button id="end-call-button" class="btn btn-danger" style="display: none">End Call</button>
 
+    <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <!-- Your Socket.io and client.js scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="client.js"></script>
+
+    <!-- End Call Button -->
   </body>
 </html>

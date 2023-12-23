@@ -25,7 +25,7 @@ jobs:
 
       - name: Start Node.js application
         run: |
-          npm start
+          npm start &
           
   deploy-to-azure:
     needs: deploy

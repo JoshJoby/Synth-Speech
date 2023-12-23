@@ -6,10 +6,16 @@ const endCall = document.getElementById('end-call-button')
 const shareCall = document.getElementById('share-button')
 const videoChatContainer = document.getElementById('video-chat-container')
 const localVideoComponent = document.getElementById('local-video')
+const localImageComponent = document.getElementById('local-image')
 const remoteVideoComponent = document.getElementById('remote-video')
+const toggleWebcamButton = document.getElementById('toggle-webcam-button');
+const remoteImageComponent = document.getElementById('remote-image')
 
 // Variables.
 const socket = io()
+socket.on('connect', () => {
+  console.log('Socket connected successfully!');
+});
 const mediaConstraints = {
   audio: true,
   video: { width: 1280, height: 720 },
@@ -21,6 +27,7 @@ let rtcPeerConnection // Connection between the local device and the remote peer
 let roomId
 let c = 0
 let isJoined = false
+
 // Free public STUN servers provided by Google.
 const iceServers = {
   iceServers: [
@@ -36,6 +43,19 @@ const iceServers = {
 let mediaRecorder
 let recordedAudioChunks = []
 
+window.addEventListener('beforeunload', function (event) {
+  // Check if a call is in progress
+  if (rtcPeerConnection || localStream) {
+    // Notify the server about the call termination
+    endCallHandler();
+    
+    // This will display a confirmation dialog in some browsers
+    // to confirm if the user really wants to leave the page.
+    event.returnValue = "Are you sure you want to leave the app? Your call will be disconnected.";
+  }
+});
+
+
 // BUTTON LISTENER ============================================================
 connectButton.addEventListener('click', () => {
   
@@ -46,6 +66,10 @@ connectButton.addEventListener('click', () => {
 endCall.addEventListener('click', () => {
   endCallHandler()
 })
+
+toggleWebcamButton.addEventListener('click', () => {
+  toggleWebcam();
+});
 
 shareCall.addEventListener('click', () => {
   copyRoomUrlToClipboard()
@@ -59,7 +83,7 @@ socket.on('room_created', async () => {
   isRoomCreator = true
 })
 
-socket.on('end_call', () => {
+socket.on('end_call', (roomId) => {
   console.log('Socket event callback: end_call')
   endCallHandler()
 })
@@ -110,6 +134,12 @@ socket.on('webrtc_answer', (event) => {
   rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event))
 })
 
+socket.on('toggle_webcam', (event) => {
+
+  const { webcamEnabled } = event;
+  updateRemoteWebcamStatus(webcamEnabled);
+});
+
 socket.on('webrtc_ice_candidate', (event) => {
   console.log('Socket event callback: webrtc_ice_candidate')
 
@@ -149,6 +179,7 @@ function endCallHandler() {
     console.log('Connection closed!')
     rtcPeerConnection.close()
     rtcPeerConnection = null
+    socket.emit('end_call', roomId)
   }
 
   // Stop the local stream tracks
@@ -171,15 +202,79 @@ function endCallHandler() {
   videoChatContainer.style = 'display: none'
   roomSelectionContainer.style = 'display: block; max-width: 25rem; background-color: #333'
   endCall.style = 'display: none'
+  toggleWebcamButton.style = 'display: none'
+
 
   // Emit an event to signal the end of the call
-  socket.emit('end_call', roomId)
 }
+
+function toggleWebcam() {
+  if (localStream) {
+    const videoTracks = localStream.getVideoTracks();
+
+    if (videoTracks.length > 0) {
+      // Disable webcam
+      videoTracks[0].enabled = !videoTracks[0].enabled;
+
+      // Show/hide default icon based on webcam status
+      if (videoTracks[0].enabled) {
+        // Webcam enabled, show user's webcam
+        localVideoComponent.srcObject = localStream;
+        localImageComponent.style.display = 'none'
+        console.log('toggling webcam')
+        // console.log(videoTracks[0].enabled)
+
+        socket.emit('toggle_webcam', {
+          roomId,
+          webcamEnabled: videoTracks[0].enabled,
+        });
+
+      } else {
+        // Webcam disabled, show default icon
+        localVideoComponent.srcObject = null;
+        localImageComponent.style = 'display: block; width: 50px; height: 50px'
+        console.log('toggling webcam')
+        // console.log(videoTracks[0].enabled)
+
+        socket.emit('toggle_webcam', {
+          roomId,
+          webcamEnabled: videoTracks[0].enabled,
+        });
+      }
+
+      // Broadcast the webcam toggle event
+    }
+
+    
+  }
+}
+
+function updateRemoteWebcamStatus(webcamEnabled) {
+  // Update UI on the receiver's side based on the webcam status
+  // (e.g., display default icon)
+  console.log('Socket event callback: toggle_webcam');
+  console.log(webcamEnabled);
+  if (webcamEnabled) {
+    // Remote webcam enabled, show remote user's webcam
+    console.log('Switching camera on');
+    remoteVideoComponent.style.visibility = 'visible';
+    remoteImageComponent.style.display = 'none';
+  } else {
+    // Remote webcam disabled, show default icon
+    console.log('Switching camera off');
+    remoteVideoComponent.style.visibility = 'hidden';
+    remoteImageComponent.style.display = 'block';
+  }
+}
+
+
 
 function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
   videoChatContainer.style = 'display: block'
-  endCall.style = 'margin-left: 50%; display: block'
+  endCall.style = ' display: inline-block'
+  toggleWebcamButton.style = 'display: inline-block'
+
 }
 
 async function setLocalStream(mediaConstraints) {
@@ -327,8 +422,18 @@ function copyRoomUrlToClipboardFallBack(roomText) {
 
 
 function setRemoteStream(event) {
-  remoteVideoComponent.srcObject = event.streams[0]
-  remoteStream = event.stream
+  console.log('Setting remote stream')
+  if (event.streams.length > 0 && event.streams[0].getVideoTracks().length > 0) {
+    // Remote user has a video stream, display it
+    remoteVideoComponent.srcObject = event.streams[0];
+    remoteImageComponent.style.display = 'none'
+  } else {
+    // Remote user does not have a video stream, display default icon
+    remoteVideoComponent.srcObject = null;
+    remoteImageComponent.style = 'display: block; width: 100px; height: 100px'
+  }
+
+  remoteStream = event.stream;
 }
 
 function sendIceCandidate(event) {

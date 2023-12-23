@@ -30,6 +30,17 @@ io.on('connection', (socket) => {
     console.log(`Broadcasting start_call event to peers in room ${roomId}`);
     socket.broadcast.to(roomId).emit('start_call');
   });
+  
+  socket.on('toggle_webcam', (event) => {
+    const { roomId, webcamEnabled } = event;
+    socket.to(roomId).emit('toggle_webcam', { webcamEnabled });
+  });
+
+  socket.on('end_call', (roomId) => {
+    console.log(`Ending call in room ${roomId}`);
+    io.to(roomId).emit('end_call');
+  });
+
 
   socket.on('webrtc_offer', (event) => {
     console.log(`Broadcasting webrtc_offer event to peers in room ${event.roomId}`);

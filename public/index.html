@@ -50,9 +50,27 @@
         border-radius: 100px; /* You can adjust the value to control the roundness of the corners */
       }
 
+      #local-image {
+        position: absolute;
+        height: 10%;
+        width: 10%;
+        bottom: 0px;
+        left: 0px;
+        border-radius: 100px; /* You can adjust the value to control the roundness of the corners */
+      }
+
       #remote-video {
         height: 100%;
         width: 100%;
+      }
+
+      #remote-image {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        height: 10%;
+        width: 5%;
       }
 
       .card-container {
@@ -98,11 +116,28 @@
 
         #local-video {
           margin-bottom: 33px;
-          height: 25%;
-          width: 25%;
+          height: 33%;
+          width: 33%;
           margin-left: 70%;
           border-radius: 30px; /* You can adjust the value to control the roundness of the corners */
         }
+
+        #local-image {
+          margin-bottom: 33px;
+          height: 10%;
+          width: 20%;
+          margin-left: 75%;
+          border-radius: 30px; /* You can adjust the value to control the roundness of the corners */
+        }
+
+        #remote-image {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        height: 10%;
+        width: 20%;
+      }
 
         .connect-button-container {
           font-size: 16px;
@@ -114,9 +149,9 @@
   <body>
     <div class="card centered mx-auto card-container" id="room-selection-container">
       <div class="card-body text-white card-body-container">
-        <h1 class="card-title card-title-container">WebRTC video conference</h1>
+        <h1 class="card-title card-title-container">Synth Speech</h1>
         <label class="card-text card-text-container"
-          >Enter the number of the room you want to connect</label
+          >Enter the number of the reciepient you want to call</label
         >
         <input id="room-input" type="text" class="form-control form-input-container" />
         <button id="connect-button" class="btn btn-primary connect-button-container">
@@ -129,8 +164,11 @@
     </div>
     <a id="download-link" style="display: none"></a>
     <div id="video-chat-container" class="centered video-position" style="display: none">
+      <img id="local-image" src="assets/images/icons8-male-user-100.png" style="display: none">
       <video id="local-video" autoplay="autoplay" muted="muted"></video>
+      <img id="remote-image" src="assets/images/icons8-male-user-100.png" style="display: none">
       <video id="remote-video" autoplay="autoplay"></video>
+      <button id="toggle-webcam-button" class="btn btn-secondary" style="display: none">Show Webcam</button>
       <button id="end-call-button" class="btn btn-danger" style="display: none">End Call</button>
     </div>
 

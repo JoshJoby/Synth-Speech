@@ -14,14 +14,14 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up Node.js version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v1
         with:
-          node-version: '18' # Use a version that is compatible with your project
+          node-version: '14.x' # Use a version that is compatible with your project
 
       - name: npm install
         run: |
           npm install
-          npm audit fix --force # Attempt to fix vulnerabilities
+          npm audit fix --force
 
       - name: Start Node.js application
         run: |
@@ -35,8 +35,14 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: node-app
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
+        id: deploy-to-webapp
         with:
           app-name: 'synth-speech'
           slot-name: 'Production'

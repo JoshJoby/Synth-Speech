@@ -5,6 +5,10 @@ const io = require('socket.io')(server);
 
 app.use('/', express.static('public'));
 
+app.get("/Hi", (req, res) => {
+  res.send("Hi")
+ });
+ 
 io.on('connection', (socket) => {
   socket.on('join', (roomId) => {
     const selectedRoom = io.sockets.adapter.rooms[roomId];

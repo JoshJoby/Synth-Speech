@@ -4,6 +4,10 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 app.use('/', express.static(__dirname));
+
+app.get('/test', (req, res) => {
+  res.send('This is a test response for /test endpoint');
+});
  
 io.on('connection', (socket) => {
   socket.on('join', (roomId) => {

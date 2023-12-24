@@ -3,11 +3,7 @@ const app = express();
 const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
-app.use('/', express.static('public'));
-
-app.get("/Hi", (req, res) => {
-  res.send("Hi")
- });
+app.use('/', express.static(__dirname));
  
 io.on('connection', (socket) => {
   socket.on('join', (roomId) => {

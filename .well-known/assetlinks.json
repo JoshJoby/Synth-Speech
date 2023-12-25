@@ -1,0 +1,5 @@
+[{
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target" : { "namespace": "android_app", "package_name": "com.example.synth_speech_app",
+                 "sha256_cert_fingerprints": ["SHA256: 81:C2:EB:4E:1C:A3:21:E4:0A:D1:B7:64:41:7D:9F:C1:15:43:7D:63:32:3F:49:38:69:64:FB:7B:DE:6F:DC:93"] }
+  }]

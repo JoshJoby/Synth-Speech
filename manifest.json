@@ -1,7 +1,7 @@
 {
     "name":"PWA Tutorial",
     "short_name":"PWA",
-    "start_url":"index.html",
+    "start_url":"public/main.html",
     "display":"fullscreen",
     "background_color":"#5900b3",
     "theme_color":"black",
@@ -9,14 +9,9 @@
     "description":"This is a PWA tutorial.",
     "icons":[
     {
-    "src":"images/stun-turn-communication.jpg",                      
-    "sizes":"192x192",
-    "type":"image/jpg"
-    },
-    {
-    "src":"images/stun-turn-communication.jpg",                      
-    "sizes":"512x512",
-    "type":"image/jpg"
+    "src":"public/assets/images/love.png",                      
+    "sizes":"144x144",
+    "type":"image/png"
     }
   ]
 }

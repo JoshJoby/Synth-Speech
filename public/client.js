@@ -11,7 +11,7 @@ const remoteVideoComponent = document.getElementById('remote-video')
 const toggleWebcamButton = document.getElementById('toggle-webcam-button');
 const remoteImageComponent = document.getElementById('remote-image')
 
-// Variables.
+// Variables. 
 const socket = io()
 socket.on('connect', () => {
   console.log('Socket connected successfully!');

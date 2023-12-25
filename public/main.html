@@ -18,8 +18,7 @@
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     />
-    <link rel="manifest"
-    href="manifest.webmanifest" crossorigin="use-credentials">
+
 
     <style type="text/css">
       body {
@@ -191,25 +190,7 @@
     <!-- Your Socket.io and client.js scripts -->
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="client.js"></script>
-    <script>
-      window.addEventListener('load', () => {
-        registerSW();
-      });
-   
-      // Register the Service Worker
-      async function registerSW() {
-        if ('serviceWorker' in navigator) {
-          try {
-            await navigator
-                  .serviceWorker
-                  .register('serviceworker.js');
-          }
-          catch (e) {
-            console.log('SW registration failed');
-          }
-        }
-      }
-   </script>
+
     <!-- End Call Button -->
   </body>
 </html>

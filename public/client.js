@@ -10,7 +10,7 @@ const localImageComponent = document.getElementById('local-image')
 const remoteVideoComponent = document.getElementById('remote-video')
 const toggleWebcamButton = document.getElementById('toggle-webcam-button');
 const remoteImageComponent = document.getElementById('remote-image')
-
+const audioFiles = [];
 // Variables. 
 const socket = io()
 socket.on('connect', () => {
@@ -295,16 +295,50 @@ async function setLocalStream(mediaConstraints) {
 }
 
 function downloadRecordedAudio(blob) {
-  const audioBlob = new Blob([blob], { type: 'audio/webm' })
+  const audioBlob = new Blob([blob], { type: 'audio/ogg' })
   const audioURL = window.URL.createObjectURL(audioBlob)
 
   const anchorElement = document.createElement('a')
   anchorElement.href = audioURL
-  anchorElement.download = 'recorded_audio' + c++ + '.webm' // Change the filename if needed
-  document.body.appendChild(anchorElement) // Append to the body for Firefox
-  // anchorElement.click();                 //TO DOWNLOAD
-  document.body.removeChild(anchorElement) // Remove after click
+  const fileName = 'recorded_audio' + c++ + '.ogg' // Change the filename if needed
+  audioFiles.push({ blob: audioBlob, fileName: fileName });
+
+  // document.body.appendChild(anchorElement) // Append to the body for Firefox
+  // // anchorElement.click();                 //TO DOWNLOAD
+  // document.body.removeChild(anchorElement) // Remove after click
 }
+
+function sendAudioFiles() {
+  if (audioFiles.length === 0) {
+    console.log("No audio files to send.");
+    return;
+  }
+
+  // Prepare FormData to send audio files
+  const formData = new FormData();
+  audioFiles.forEach((audioFile) => {
+    formData.append('audioFiles', audioFile.blob, audioFile.fileName);
+  });
+
+  // Send HTTP POST request
+  fetch('http://127.0.0.1:8080/upload_audio', {
+    method: 'POST',
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Audio files sent successfully:', data);
+      // Clear the array after successful send
+    })
+    .catch(error => console.error('Error sending audio files:', error));
+
+    audioFiles.length = 0;
+    c = 0;
+}
+
+// Set interval to send audio files every 30 seconds
+setInterval(sendAudioFiles, 30000);
+
 
 function startRecordingLocalAudio(stream) {
   const audioTrack = stream.getAudioTracks()[0]
@@ -320,14 +354,15 @@ function startRecordingLocalAudio(stream) {
 
     mediaRecorder.onstop = () => {
       if (mediaRecorder.state === 'inactive') {
-        const recordedAudioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' })
+        const recordedAudioBlob = new Blob(recordedAudioChunks, { type: 'audio/ogg' })
         socket.emit('recorded_audio', { recordedAudioBlob, roomId })
 
         // Reset the recorded audio chunks array
         recordedAudioChunks = []
 
         // Start a new recording after 5 seconds
-        setTimeout(startNewRecording, 5000)
+        // setTimeout(startNewRecording, 5000)
+        startNewRecording();
       }
     }
 

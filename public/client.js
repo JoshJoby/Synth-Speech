@@ -27,6 +27,7 @@ let rtcPeerConnection // Connection between the local device and the remote peer
 let roomId
 let c = 0
 let isJoined = false
+let synthTest = false;
 
 // Free public STUN servers provided by Google.
 const iceServers = {
@@ -308,36 +309,123 @@ function downloadRecordedAudio(blob) {
   // document.body.removeChild(anchorElement) // Remove after click
 }
 
+function showPopup(message, options = {}) {
+  // Create modal element
+  const modal = document.createElement('div');
+  modal.className = 'modal fade';
+  modal.innerHTML = `
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">${message}</div>
+      </div>
+    </div>`;
+  // Add modal to the body
+  document.body.appendChild(modal);
+  // Show modal
+  $(modal).modal('show');
+  // Trigger vibration
+  if (navigator.vibrate) {
+    navigator.vibrate([200, 100, 200]);
+  }
+  // Close modal after animation
+  if (options.autoClose) {
+    setTimeout(() => {
+      $(modal).modal('hide');
+    }, 5000);
+  }
+  // Handle options for the second popup
+  if (options.buttons) {
+    const modalBody = modal.querySelector('.modal-body');
+    const buttonDiv = document.createElement('div');
+    buttonDiv.className = 'text-center';
+    buttonDiv.innerHTML = `
+      <button type="button" class="btn btn-primary mr-2" id="stayOnCallBtn">Stay on Call</button>
+      <button type="button" class="btn btn-danger" id="exitCallBtn">Exit Call</button>
+    `;
+    modalBody.appendChild(buttonDiv);
+    // Add event listeners to buttons
+    const stayOnCallBtn = modal.querySelector('#stayOnCallBtn');
+    const exitCallBtn = modal.querySelector('#exitCallBtn');
+    stayOnCallBtn.addEventListener('click', () => {
+      $(modal).modal('hide');
+    });
+    exitCallBtn.addEventListener('click', () => {
+      $(modal).modal('hide');
+      endCall.click();
+      clearInterval(intervalId);
+    });
+    // Start timer for auto closing the popup if no interaction
+    let timer;
+    const closePopup = () => {
+      $(modal).modal('hide');
+      clearInterval(timer);
+    };
+    timer = setTimeout(closePopup, 10000); // 10 seconds timer
+    // Restart timer if any interaction occurs
+    modal.addEventListener('click', () => {
+      clearTimeout(timer);
+      timer = setTimeout(closePopup, 10000); // Restart timer
+    });
+  }
+  // Remove modal after animation
+  $(modal).on('hidden.bs.modal', function (e) {
+    modal.remove();
+  });
+}
+
 function sendAudioFiles() {
   if (audioFiles.length === 0) {
     console.log("No audio files to send.");
     return;
   }
 
+  let modelResult;
   // Prepare FormData to send audio files
   const formData = new FormData();
   audioFiles.forEach((audioFile) => {
     formData.append('audioFiles', audioFile.blob, audioFile.fileName);
   });
-
   // Send HTTP POST request
-  fetch('https://synthspeechapi.azurewebsites.net/upload_audio', {
+  // fetch('https://synthspeechapi.azurewebsites.net/upload_audio', {
+    fetch('http://127.0.0.1:8080/upload_audio', {
     method: 'POST',
     body: formData
+  })  
+  .then(response => {
+    return response.json(); // Return the promise
   })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Audio files sent successfully:', data);
-      // Clear the array after successful send
-    })
-    .catch(error => console.error('Error sending audio files:', error));
-
+  .then(responseText => {
+    modelResult = responseText
+    console.log("RESPONSE : " + responseText.predictions); // Log the response text
+    let testSum = 0
+    for(var i = 0; i < 6; i++){
+      testSum = testSum + responseText.predictions[i];
+    }
+    if(testSum == 6){
+      if(!synthTest){
+        console.log("BOT ACTIVITY DETECTED!");
+        showPopup("BOT ACTIVITY DETECTED!", { autoClose: true });
+        synthTest = true;
+      }
+      else{
+        console.log("BOT ACTIVITY DETECTED TWICE! ENDING CALL");
+        showPopup("BOT ACTIVITY DETECTED TWICE! <br>DO YOU WANT TO END THE CALL?<br><br>", { buttons: true });
+        // endCall.click();
+        // clearInterval(intervalId);
+      }
+    }
     audioFiles.length = 0;
     c = 0;
+  })
+    .catch(error => {
+      console.error('Error sending audio files:', error);
+      console.log(error.message);
+      console.log(formData);
+    });
 }
 
 // Set interval to send audio files every 30 seconds
-setInterval(sendAudioFiles, 30000);
+let intervalId = setInterval(sendAudioFiles, 30000);
 
 
 function startRecordingLocalAudio(stream) {

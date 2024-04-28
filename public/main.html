@@ -1,25 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport"
-          content="width=device-width,
-                   initial-scale=1">
-    <meta http-equiv="X-UA-Compatible"
-          content="ie=edge">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,
+                   initial-scale=1"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>WebRTC</title>
-    <meta name=
-    "apple-mobile-web-app-status-bar"
-          content="#aa7700">
-    <meta name="theme-color"
-          content="black">
+    <meta name="apple-mobile-web-app-status-bar" content="#aa7700" />
+    <meta name="theme-color" content="black" />
     <!-- Bootstrap CSS -->
     <link
       rel="stylesheet"
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
     />
-    <link rel="manifest"
-    href="../manifest.json" crossorigin="use-credentials">
+    <link rel="manifest" href="../manifest.json" crossorigin="use-credentials" />
 
     <style type="text/css">
       body {
@@ -45,7 +42,7 @@
       }
 
       #video-chat-container {
-        margin-top:4%;
+        margin-top: 4%;
         width: 100%;
         height: 100%;
         background-color: black;
@@ -141,17 +138,29 @@
         }
 
         #remote-image {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        height: 10%;
-        width: 20%;
-      }
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          height: 10%;
+          width: 20%;
+        }
 
         .connect-button-container {
           font-size: 16px;
         }
+      }
+
+      .popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background: #fff;
+        border: 2px solid #000;
+        border-radius: 5px;
+        z-index: 9999;
       }
     </style>
   </head>
@@ -167,21 +176,26 @@
         <button id="connect-button" class="btn btn-primary connect-button-container">
           CONNECT
         </button>
-        <button id="share-button" style="display: none;" class="btn btn-primary share-button-container">
+        <button
+          id="share-button"
+          style="display: none"
+          class="btn btn-primary share-button-container"
+        >
           SHARE INVITE LINK
         </button>
       </div>
     </div>
     <a id="download-link" style="display: none"></a>
     <div id="video-chat-container" class="centered video-position" style="display: none">
-      <img id="local-image" src="assets/images/icons8-male-user-100.png" style="display: none">
+      <img id="local-image" src="assets/images/icons8-male-user-100.png" style="display: none" />
       <video id="local-video" autoplay="autoplay" muted="muted"></video>
-      <img id="remote-image" src="assets/images/icons8-male-user-100.png" style="display: none">
+      <img id="remote-image" src="assets/images/icons8-male-user-100.png" style="display: none" />
       <video id="remote-video" autoplay="autoplay"></video>
-      <button id="toggle-webcam-button" class="btn btn-secondary" style="display: none">Show Webcam</button>
+      <button id="toggle-webcam-button" class="btn btn-secondary" style="display: none">
+        Show Webcam
+      </button>
       <button id="end-call-button" class="btn btn-danger" style="display: none">End Call</button>
     </div>
-
 
     <!-- Bootstrap JS and Popper.js (required for Bootstrap) -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
@@ -192,24 +206,20 @@
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="client.js"></script>
     <script>
+      window.addEventListener('load', () => {
+        registerSW()
+      })
 
-window.addEventListener('load', () => {
-          registerSW();
-        });
-     
-        // Register the Service Worker
-        async function registerSW() {
-          if ('serviceWorker' in navigator) {
-            try {
-              await navigator
-                    .serviceWorker
-                    .register('./serviceworker.js');
-            }
-            catch (e) {
-              console.log('SW registration failed');
-            }
+      // Register the Service Worker
+      async function registerSW() {
+        if ('serviceWorker' in navigator) {
+          try {
+            await navigator.serviceWorker.register('./serviceworker.js')
+          } catch (e) {
+            console.log('SW registration failed')
           }
         }
+      }
     </script>
     <!-- End Call Button -->
   </body>

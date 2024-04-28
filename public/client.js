@@ -387,7 +387,7 @@ function sendAudioFiles() {
   });
   // Send HTTP POST request
   // fetch('http://127.0.0.1:8080/upload_audio', {
-    fetch('http://synthspeechapi.azurewebsites.net:8080/upload_audio', {
+    fetch('https://synthspeechapi.azurewebsites.net:8080/upload_audio', {
     method: 'POST',
     body: formData
   })  

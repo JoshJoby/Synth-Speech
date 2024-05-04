@@ -8,14 +8,21 @@ const videoChatContainer = document.getElementById('video-chat-container')
 const localVideoComponent = document.getElementById('local-video')
 const localImageComponent = document.getElementById('local-image')
 const remoteVideoComponent = document.getElementById('remote-video')
-const toggleWebcamButton = document.getElementById('toggle-webcam-button');
+const toggleWebcamButton = document.getElementById('toggle-webcam-button')
 const remoteImageComponent = document.getElementById('remote-image')
-const audioFiles = [];
-// Variables. 
+const chatMessagesContainer = document.getElementById('chat-messages-container')
+const toggleChatsButton = document.getElementById('toggle-chat-button')
+const chatContainer = document.getElementById('chat-container')
+const chatInput = document.getElementById('chat-input')
+const sendChatButton = document.getElementById('send-chat-button')
+const muteUser = document.getElementById('mute-button')
+
+const audioFiles = []
+// Variables.
 const socket = io()
 socket.on('connect', () => {
-  console.log('Socket connected successfully!');
-});
+  console.log('Socket connected successfully!')
+})
 const mediaConstraints = {
   audio: true,
   video: { width: 1280, height: 720 },
@@ -27,7 +34,7 @@ let rtcPeerConnection // Connection between the local device and the remote peer
 let roomId
 let c = 0
 let isJoined = false
-let synthTest = false;
+let synthTest = false
 
 // Free public STUN servers provided by Google.
 const iceServers = {
@@ -48,29 +55,45 @@ window.addEventListener('beforeunload', function (event) {
   // Check if a call is in progress
   if (rtcPeerConnection || localStream) {
     // Notify the server about the call termination
-    endCallHandler();
-    
+    endCallHandler()
+
     // This will display a confirmation dialog in some browsers
     // to confirm if the user really wants to leave the page.
-    event.returnValue = "Are you sure you want to leave the app? Your call will be disconnected.";
+    event.returnValue = 'Are you sure you want to leave the app? Your call will be disconnected.'
   }
-});
-
+})
 
 // BUTTON LISTENER ============================================================
 connectButton.addEventListener('click', () => {
-  
   connectButton.disabled = true
   joinRoom(roomInput.value)
 })
+
+let isMuted = false;
+
+muteUser.addEventListener('click', () => {
+  isMuted = !isMuted; // Toggle mute state
+  if (isMuted) {
+    // Mute action
+    socket.emit('mute_user', { roomId, mutedUserId: socket.id, isMuted });
+
+    muteUser.textContent = 'Unmute'; // Change button text
+  } else {
+    // Unmute action
+    socket.emit('unmute_user', { roomId, mutedUserId: socket.id, isMuted });
+
+    muteUser.textContent = 'Mute'; // Change button text
+  }
+  // Emit an event to inform the server about the mute action
+});
 
 endCall.addEventListener('click', () => {
   endCallHandler()
 })
 
 toggleWebcamButton.addEventListener('click', () => {
-  toggleWebcam();
-});
+  toggleWebcam()
+})
 
 shareCall.addEventListener('click', () => {
   copyRoomUrlToClipboard()
@@ -89,6 +112,27 @@ socket.on('end_call', (roomId) => {
   endCallHandler()
 })
 
+socket.on('mute', () => {
+  // Handle the 'mute' event here
+  console.log("You have been muted!");
+  // You can perform any action you want when the 'mute' event is received
+  if (localStream) {
+    localStream.getAudioTracks()[0].enabled = false; 
+  }
+}
+)
+
+socket.on('unmute', () => {
+  // Handle the 'mute' event here
+  console.log("You have been unmuted!");
+  // You can perform any action you want when the 'mute' event is received
+  if (localStream) {
+    localStream.getAudioTracks()[0].enabled = true; 
+  }
+}
+)
+
+
 socket.on('room_joined', async () => {
   console.log('Socket event callback: room_joined')
   isJoined = true
@@ -102,6 +146,7 @@ socket.on('full_room', () => {
 
   alert('The room is full, please try another one')
 })
+
 
 socket.on('start_call', async () => {
   console.log('Socket event callback: start_call')
@@ -135,11 +180,15 @@ socket.on('webrtc_answer', (event) => {
   rtcPeerConnection.setRemoteDescription(new RTCSessionDescription(event))
 })
 
-socket.on('toggle_webcam', (event) => {
-
-  const { webcamEnabled } = event;
-  updateRemoteWebcamStatus(webcamEnabled);
+socket.on('chat_message', (data) => {
+  // Display received chat message in the chat window
+  displayChatMessage(data);
 });
+
+socket.on('toggle_webcam', (event) => {
+  const { webcamEnabled } = event
+  updateRemoteWebcamStatus(webcamEnabled)
+})
 
 socket.on('webrtc_ice_candidate', (event) => {
   console.log('Socket event callback: webrtc_ice_candidate')
@@ -163,6 +212,35 @@ socket.on('recorded_audio', (event) => {
 })
 
 // FUNCTIONS ==================================================================
+
+// Chat message sending functionality
+console.log("Adding event listener to send button");
+sendChatButton.addEventListener('click', () => {
+  console.log('Send button was clicked!');
+  const message = chatInput.value.trim()
+  if (message !== '') {
+    // Emit a chat message event to the server
+    socket.emit('chat_message', { roomId, message })
+    // Display the sent message in the chat window
+    displayChatMessage({ sender: 'You', message })
+    // Clear the chat input field
+    chatInput.value = ''
+  }
+})
+
+// Function to display received chat messages in the chat window
+function displayChatMessage({ sender, message }) {
+  const messageElement = document.createElement('div')
+  messageElement.classList.add('chat-message')
+  if (sender === 'You') {
+    messageElement.classList.add('own-message')
+  }
+  messageElement.innerHTML = `<span class="message-sender">${sender}:</span> ${message}`
+  chatMessagesContainer.appendChild(messageElement)
+  // Scroll to the bottom of the chat window to show the latest message
+  chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight
+}
+
 function joinRoom(room) {
   if (room === '') {
     alert('Please type a room ID')
@@ -205,22 +283,21 @@ function endCallHandler() {
   endCall.style = 'display: none'
   toggleWebcamButton.style = 'display: none'
 
-
   // Emit an event to signal the end of the call
 }
 
 function toggleWebcam() {
   if (localStream) {
-    const videoTracks = localStream.getVideoTracks();
+    const videoTracks = localStream.getVideoTracks()
 
     if (videoTracks.length > 0) {
       // Disable webcam
-      videoTracks[0].enabled = !videoTracks[0].enabled;
+      videoTracks[0].enabled = !videoTracks[0].enabled
 
       // Show/hide default icon based on webcam status
       if (videoTracks[0].enabled) {
         // Webcam enabled, show user's webcam
-        localVideoComponent.srcObject = localStream;
+        localVideoComponent.srcObject = localStream
         localImageComponent.style.display = 'none'
         console.log('toggling webcam')
         // console.log(videoTracks[0].enabled)
@@ -228,11 +305,10 @@ function toggleWebcam() {
         socket.emit('toggle_webcam', {
           roomId,
           webcamEnabled: videoTracks[0].enabled,
-        });
-
+        })
       } else {
         // Webcam disabled, show default icon
-        localVideoComponent.srcObject = null;
+        localVideoComponent.srcObject = null
         localImageComponent.style = 'display: block; width: 50px; height: 50px'
         console.log('toggling webcam')
         // console.log(videoTracks[0].enabled)
@@ -240,42 +316,40 @@ function toggleWebcam() {
         socket.emit('toggle_webcam', {
           roomId,
           webcamEnabled: videoTracks[0].enabled,
-        });
+        })
       }
 
       // Broadcast the webcam toggle event
     }
-
-    
   }
 }
 
 function updateRemoteWebcamStatus(webcamEnabled) {
   // Update UI on the receiver's side based on the webcam status
   // (e.g., display default icon)
-  console.log('Socket event callback: toggle_webcam');
-  console.log(webcamEnabled);
+  console.log('Socket event callback: toggle_webcam')
+  console.log(webcamEnabled)
   if (webcamEnabled) {
     // Remote webcam enabled, show remote user's webcam
-    console.log('Switching camera on');
-    remoteVideoComponent.style.visibility = 'visible';
-    remoteImageComponent.style.display = 'none';
+    console.log('Switching camera on')
+    remoteVideoComponent.style.visibility = 'visible'
+    remoteImageComponent.style.display = 'none'
   } else {
     // Remote webcam disabled, show default icon
-    console.log('Switching camera off');
-    remoteVideoComponent.style.visibility = 'hidden';
-    remoteImageComponent.style.display = 'block';
+    console.log('Switching camera off')
+    remoteVideoComponent.style.visibility = 'hidden'
+    remoteImageComponent.style.display = 'block'
   }
 }
-
-
 
 function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
   videoChatContainer.style = 'display: block'
+  chatContainer.style = 'display: block'
   endCall.style = ' display: inline-block'
+  muteUser.style = 'display: inline-block'
+  toggleChatsButton.style = 'display: inline-block';
   toggleWebcamButton.style = 'display: inline-block'
-
 }
 
 async function setLocalStream(mediaConstraints) {
@@ -302,7 +376,7 @@ function downloadRecordedAudio(blob) {
   const anchorElement = document.createElement('a')
   anchorElement.href = audioURL
   const fileName = 'recorded_audio' + c++ + '.ogg' // Change the filename if needed
-  audioFiles.push({ blob: audioBlob, fileName: fileName });
+  audioFiles.push({ blob: audioBlob, fileName: fileName })
 
   // document.body.appendChild(anchorElement) // Append to the body for Firefox
   // // anchorElement.click();                 //TO DOWNLOAD
@@ -311,122 +385,127 @@ function downloadRecordedAudio(blob) {
 
 function showPopup(message, options = {}) {
   // Create modal element
-  const modal = document.createElement('div');
-  modal.className = 'modal fade';
+  const modal = document.createElement('div')
+  modal.className = 'modal fade'
   modal.innerHTML = `
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-body">${message}</div>
       </div>
-    </div>`;
+    </div>`
   // Add modal to the body
-  document.body.appendChild(modal);
+  document.body.appendChild(modal)
   // Show modal
-  $(modal).modal('show');
+  $(modal).modal('show')
   // Trigger vibration
   if (navigator.vibrate) {
-    navigator.vibrate([200, 100, 200]);
+    navigator.vibrate([200, 100, 200])
   }
   // Close modal after animation
   if (options.autoClose) {
     setTimeout(() => {
-      $(modal).modal('hide');
-    }, 5000);
+      $(modal).modal('hide')
+    }, 5000)
   }
   // Handle options for the second popup
   if (options.buttons) {
-    const modalBody = modal.querySelector('.modal-body');
-    const buttonDiv = document.createElement('div');
-    buttonDiv.className = 'text-center';
+    const modalBody = modal.querySelector('.modal-body')
+    const buttonDiv = document.createElement('div')
+    buttonDiv.className = 'text-center'
     buttonDiv.innerHTML = `
       <button type="button" class="btn btn-primary mr-2" id="stayOnCallBtn">Stay on Call</button>
       <button type="button" class="btn btn-danger" id="exitCallBtn">Exit Call</button>
-    `;
-    modalBody.appendChild(buttonDiv);
+    `
+    modalBody.appendChild(buttonDiv)
     // Add event listeners to buttons
-    const stayOnCallBtn = modal.querySelector('#stayOnCallBtn');
-    const exitCallBtn = modal.querySelector('#exitCallBtn');
+    const stayOnCallBtn = modal.querySelector('#stayOnCallBtn')
+    const exitCallBtn = modal.querySelector('#exitCallBtn')
     stayOnCallBtn.addEventListener('click', () => {
-      $(modal).modal('hide');
-    });
+      $(modal).modal('hide')
+    })
     exitCallBtn.addEventListener('click', () => {
-      $(modal).modal('hide');
-      endCall.click();
-      clearInterval(intervalId);
-    });
+      $(modal).modal('hide')
+      endCall.click()
+      clearInterval(intervalId)
+    })
     // Start timer for auto closing the popup if no interaction
-    let timer;
+    let timer
     const closePopup = () => {
-      $(modal).modal('hide');
-      clearInterval(timer);
-    };
-    timer = setTimeout(closePopup, 10000); // 10 seconds timer
+      $(modal).modal('hide')
+      clearInterval(timer)
+    }
+    timer = setTimeout(closePopup, 10000) // 10 seconds timer
     // Restart timer if any interaction occurs
     modal.addEventListener('click', () => {
-      clearTimeout(timer);
-      timer = setTimeout(closePopup, 10000); // Restart timer
-    });
+      clearTimeout(timer)
+      timer = setTimeout(closePopup, 10000) // Restart timer
+    })
   }
   // Remove modal after animation
   $(modal).on('hidden.bs.modal', function (e) {
-    modal.remove();
-  });
+    modal.remove()
+  })
 }
 
+let isRequestInProgress = false
+
 function sendAudioFiles() {
-  if (audioFiles.length === 0) {
-    console.log("No audio files to send.");
-    return;
+  if (isRequestInProgress || audioFiles.length === 0) {
+    console.log('No audio files to send or a request is already in progress.')
+    return
   }
 
-  let modelResult;
+  isRequestInProgress = true // Set the flag to indicate a request is in progress
+
+  let modelResult
   // Prepare FormData to send audio files
-  const formData = new FormData();
+  const formData = new FormData()
   audioFiles.forEach((audioFile) => {
-    formData.append('audioFiles', audioFile.blob, audioFile.fileName);
-  });
+    formData.append('audioFiles', audioFile.blob, audioFile.fileName)
+  })
   // Send HTTP POST request
-  // fetch('http://127.0.0.1:8080/upload_audio', {
-    fetch('https://synthspeechapi.azurewebsites.net:8080/upload_audio', {
+  fetch('http://127.0.0.1:8080/upload_audio', {
     method: 'POST',
-    body: formData
-  })  
-  .then(response => {
-    return response.json(); // Return the promise
+    body: formData,
   })
-  .then(responseText => {
-    modelResult = responseText
-    console.log("RESPONSE : " + responseText.predictions); // Log the response text
-    let testSum = 0
-    for(var i = 0; i < 6; i++){
-      testSum = testSum + responseText.predictions[i];
-    }
-    if(testSum == 6){
-      if(!synthTest){
-        console.log("BOT ACTIVITY DETECTED!");
-        showPopup("BOT ACTIVITY DETECTED!", { autoClose: true });
-        synthTest = true;
+    .then((response) => {
+      return response.json() // Return the promise
+    })
+    .then((responseText) => {
+      modelResult = responseText
+      console.log('RESPONSE : ' + responseText.predictions) // Log the response text
+      let testSum = 0
+      for (var i = 0; i < 6; i++) {
+        testSum = testSum + responseText.predictions[i]
       }
-      else{
-        console.log("BOT ACTIVITY DETECTED TWICE! ENDING CALL");
-        showPopup("BOT ACTIVITY DETECTED TWICE! <br>DO YOU WANT TO END THE CALL?<br><br>", { buttons: true });
-        // endCall.click();
-        // clearInterval(intervalId);
+      if (testSum == 6) {
+        if (!synthTest) {
+          console.log('BOT ACTIVITY DETECTED!')
+          showPopup('BOT ACTIVITY DETECTED!', { autoClose: true })
+          synthTest = true
+        } else {
+          console.log('BOT ACTIVITY DETECTED TWICE! ENDING CALL')
+          showPopup('BOT ACTIVITY DETECTED TWICE! <br>DO YOU WANT TO END THE CALL?<br><br>', {
+            buttons: true,
+          })
+          // endCall.click();
+          // clearInterval(intervalId);
+        }
       }
-    }
-    audioFiles.length = 0;
-    c = 0;
-  })
-    .catch(error => {
-      console.error('Error sending audio files:', error);
-      console.log(error.message);
-      console.log(formData);
-    });
+      audioFiles.length = 0
+      c = 0
+      isRequestInProgress = false // Reset the flag since the request is completed
+    })
+    .catch((error) => {
+      console.error('Error sending audio files:', error)
+      console.log(error.message)
+      console.log(formData)
+      isRequestInProgress = false // Reset the flag in case of an error
+    })
 }
 
 // Set interval to send audio files every 30 seconds
-let intervalId = setInterval(sendAudioFiles, 30000);
-
+let intervalId = setInterval(sendAudioFiles, 30000)
 
 function startRecordingLocalAudio(stream) {
   const audioTrack = stream.getAudioTracks()[0]
@@ -450,7 +529,7 @@ function startRecordingLocalAudio(stream) {
 
         // Start a new recording after 5 seconds
         // setTimeout(startNewRecording, 5000)
-        startNewRecording();
+        startNewRecording()
       }
     }
 
@@ -512,51 +591,51 @@ async function createAnswer(rtcPeerConnection) {
 }
 
 function copyRoomUrlToClipboard() {
-  const roomUrl = window.location.href;
-  const roomText = `Join my video chat room: ${roomUrl} \n\nRoom ID : ${roomId}`;
+  const roomUrl = window.location.href
+  const roomText = `Join my video chat room: ${roomUrl} \n\nRoom ID : ${roomId}`
 
   // Check if Web Share API is available
   if (navigator.share) {
-    navigator.share({
-      title: 'Video Chat Room',
-      text: roomText
-        })
+    navigator
+      .share({
+        title: 'Video Chat Room',
+        text: roomText,
+      })
       .then(() => console.log('Room URL shared successfully!'))
-      .catch((error) => console.error('Error sharing room URL:', error));
+      .catch((error) => console.error('Error sharing room URL:', error))
   } else {
     // Web Share API not available, fallback to clipboard copy
-    copyRoomUrlToClipboardFallBack(roomText);
+    copyRoomUrlToClipboardFallBack(roomText)
   }
 }
 
 function copyRoomUrlToClipboardFallBack(roomText) {
   // Create a temporary textarea element to copy the text to clipboard
-  const tempInput = document.createElement('textarea');
-  tempInput.style.whiteSpace = 'pre-line'; // Set whiteSpace on the textarea
-  tempInput.value = roomText;
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  document.execCommand('copy');
-  document.body.removeChild(tempInput);
+  const tempInput = document.createElement('textarea')
+  tempInput.style.whiteSpace = 'pre-line' // Set whiteSpace on the textarea
+  tempInput.value = roomText
+  document.body.appendChild(tempInput)
+  tempInput.select()
+  document.execCommand('copy')
+  document.body.removeChild(tempInput)
 
   // Optionally, you can provide user feedback that the text is copied
-  alert('Room URL copied to clipboard!');
+  alert('Room URL copied to clipboard!')
 }
-
 
 function setRemoteStream(event) {
   console.log('Setting remote stream')
   if (event.streams.length > 0 && event.streams[0].getVideoTracks().length > 0) {
     // Remote user has a video stream, display it
-    remoteVideoComponent.srcObject = event.streams[0];
+    remoteVideoComponent.srcObject = event.streams[0]
     remoteImageComponent.style.display = 'none'
   } else {
     // Remote user does not have a video stream, display default icon
-    remoteVideoComponent.srcObject = null;
+    remoteVideoComponent.srcObject = null
     remoteImageComponent.style = 'display: block; width: 100px; height: 100px'
   }
 
-  remoteStream = event.stream;
+  remoteStream = event.stream
 }
 
 function sendIceCandidate(event) {

@@ -45,6 +45,25 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('end_call');
   });
 
+  socket.on('mute_user', (event) => {
+    const { roomId, userId } = event;
+    console.log(`Muting user in room ${userId}`);
+    io.to(socket.id).emit('mute');
+  });
+
+  socket.on('unmute_user', (event) => {
+    const { roomId, userId } = event;
+    console.log(`unMuting user in room ${userId}`);
+    io.to(socket.id).emit('unmute');
+  });
+
+  socket.on('chat_message', (event) => {
+    console.log(`Broadcasting chat_message event to peers in room ${event.roomId}`);
+
+    // Broadcast the chat message to all participants in the room except the sender.
+    socket.broadcast.to(event.roomId).emit('chat_message', { sender: socket.id, message: event.message });
+  });
+
 
   socket.on('webrtc_offer', (event) => {
     console.log(`Broadcasting webrtc_offer event to peers in room ${event.roomId}`);
@@ -60,6 +79,7 @@ io.on('connection', (socket) => {
     console.log(`Broadcasting webrtc_ice_candidate event to peers in room ${event.roomId}`);
     socket.broadcast.to(event.roomId).emit('webrtc_ice_candidate', event);
   });
+  
 
   // Handle the recorded audio event
   socket.on('recorded_audio', (event) => {

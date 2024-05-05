@@ -13,6 +13,8 @@ const remoteImageComponent = document.getElementById('remote-image')
 const chatMessagesContainer = document.getElementById('chat-messages-container')
 const toggleChatsButton = document.getElementById('toggle-chat-button')
 const chatContainer = document.getElementById('chat-container')
+const chatDrawer = document.getElementById('chat-drawer')
+
 const chatInput = document.getElementById('chat-input')
 const sendChatButton = document.getElementById('send-chat-button')
 const muteUser = document.getElementById('mute-button')
@@ -346,6 +348,8 @@ function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
   videoChatContainer.style = 'display: block'
   chatContainer.style = 'display: block'
+  chatDrawer.style = 'display: block'
+
   endCall.style = ' display: inline-block'
   muteUser.style = 'display: inline-block'
   toggleChatsButton.style = 'display: inline-block';

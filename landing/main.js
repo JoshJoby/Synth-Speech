@@ -11,6 +11,7 @@ const remoteVideoComponent = document.getElementById('remote-video')
 const toggleWebcamButton = document.getElementById('toggle-webcam-button')
 const remoteImageComponent = document.getElementById('remote-image')
 const chatMessagesContainer = document.getElementById('chat-messages-container')
+const chatDrawer = document.getElementById('chat-drawer')
 const toggleChatsButton = document.getElementById('toggle-chat-button')
 const chatContainer = document.getElementById('chat-container')
 const chatInput = document.getElementById('chat-input')
@@ -282,6 +283,8 @@ function endCallHandler() {
   roomSelectionContainer.style = 'display: flex;'
   endCall.style = 'display: none'
   toggleWebcamButton.style = 'display: none'
+  // chatDrawer.style = 'display: none'
+
 
   // Emit an event to signal the end of the call
 }
@@ -346,6 +349,7 @@ function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
   videoChatContainer.style = 'display: block'
   chatContainer.style = 'display: block'
+  chatDrawer.style = 'display: block; right: -400px'
   endCall.style = ' display: inline-block'
   muteUser.style = 'display: inline-block'
   toggleChatsButton.style = 'display: inline-block';

@@ -17,7 +17,7 @@ const chatContainer = document.getElementById('chat-container')
 const chatInput = document.getElementById('chat-input')
 const sendChatButton = document.getElementById('send-chat-button')
 const muteUser = document.getElementById('mute-button')
-
+const chatDiv = document.getElementById('chat-div')
 const audioFiles = []
 // Variables.
 const socket = io()
@@ -283,7 +283,8 @@ function endCallHandler() {
   roomSelectionContainer.style = 'display: flex;'
   endCall.style = 'display: none'
   toggleWebcamButton.style = 'display: none'
-  // chatDrawer.style = 'display: none'
+  chatDrawer.style = 'display: none'
+  chatDiv.style = 'display: none'
 
 
   // Emit an event to signal the end of the call
@@ -347,13 +348,14 @@ function updateRemoteWebcamStatus(webcamEnabled) {
 
 function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
+  chatDiv.style = 'background-color: black; display:flex; height: 48em '
   videoChatContainer.style = 'display: block'
   chatContainer.style = 'display: block'
-  chatDrawer.style = 'display: block; right: -400px'
-  endCall.style = ' display: inline-block'
-  muteUser.style = 'display: inline-block'
-  toggleChatsButton.style = 'display: inline-block';
-  toggleWebcamButton.style = 'display: inline-block'
+  chatDrawer.style = 'display: inline; right: -300px'
+  endCall.style = ' display: inline-block; margin-top : 1%'
+  muteUser.style = 'display: inline-block; margin-top : 1%'
+  toggleChatsButton.style = 'display: inline-block; margin-top : 1%'
+  toggleWebcamButton.style = 'display: inline-block; margin-top : 1%'
 }
 
 async function setLocalStream(mediaConstraints) {

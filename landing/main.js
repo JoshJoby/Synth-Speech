@@ -18,6 +18,8 @@ const chatInput = document.getElementById('chat-input')
 const sendChatButton = document.getElementById('send-chat-button')
 const muteUser = document.getElementById('mute-button')
 const chatDiv = document.getElementById('chat-div')
+const botCircle = document.getElementById('bot-circle')
+
 const audioFiles = []
 // Variables.
 const socket = io()
@@ -52,17 +54,17 @@ const iceServers = {
 let mediaRecorder
 let recordedAudioChunks = []
 
-window.addEventListener('beforeunload', function (event) {
-  // Check if a call is in progress
-  if (rtcPeerConnection || localStream) {
-    // Notify the server about the call termination
-    endCallHandler()
+// window.addEventListener('beforeunload', function (event) {
+//   // Check if a call is in progress
+//   if (rtcPeerConnection || localStream) {
+//     // Notify the server about the call termination
+//     endCallHandler()
 
-    // This will display a confirmation dialog in some browsers
-    // to confirm if the user really wants to leave the page.
-    event.returnValue = 'Are you sure you want to leave the app? Your call will be disconnected.'
-  }
-})
+//     // This will display a confirmation dialog in some browsers
+//     // to confirm if the user really wants to leave the page.
+//     event.returnValue = 'Are you sure you want to leave the app? Your call will be disconnected.'
+//   }
+// })
 
 // BUTTON LISTENER ============================================================
 connectButton.addEventListener('click', () => {
@@ -286,8 +288,14 @@ function endCallHandler() {
   chatDrawer.style = 'display: none'
   chatDiv.style = 'display: none'
 
+  Window.prototype.alert = null
 
-  // Emit an event to signal the end of the call
+
+  if ( window.history.replaceState ) {
+    window.history.replaceState( null, null, window.location.href );
+}
+window.location = window.location.href;
+
 }
 
 function toggleWebcam() {
@@ -348,8 +356,10 @@ function updateRemoteWebcamStatus(webcamEnabled) {
 
 function showVideoConference() {
   roomSelectionContainer.style = 'display: none'
-  chatDiv.style = 'background-color: black; display:flex; height: 48em '
-  videoChatContainer.style = 'display: block'
+  chatDiv.style.backgroundColor = 'black';
+  chatDiv.style.display = 'flex';
+  chatDiv.style.height = '42em';
+    videoChatContainer.style = 'display: block'
   chatContainer.style = 'display: block'
   chatDrawer.style = 'display: inline; right: -300px'
   endCall.style = ' display: inline-block; margin-top : 1%'
@@ -374,6 +384,7 @@ async function setLocalStream(mediaConstraints) {
     startRecordingLocalAudio(stream)
   }, 10000)
 }
+
 
 function downloadRecordedAudio(blob) {
   const audioBlob = new Blob([blob], { type: 'audio/ogg' })
@@ -469,6 +480,7 @@ function sendAudioFiles() {
   audioFiles.forEach((audioFile) => {
     formData.append('audioFiles', audioFile.blob, audioFile.fileName)
   })
+
   // Send HTTP POST request
   fetch('http://127.0.0.1:8080/upload_audio', {
     method: 'POST',
@@ -489,11 +501,17 @@ function sendAudioFiles() {
           console.log('BOT ACTIVITY DETECTED!')
           showPopup('BOT ACTIVITY DETECTED!', { autoClose: true })
           synthTest = true
+          botCircle.style = 'background-color: Yellow'
+          botCircle.classList = "circle"
+
         } else {
           console.log('BOT ACTIVITY DETECTED TWICE! ENDING CALL')
           showPopup('BOT ACTIVITY DETECTED TWICE! <br>DO YOU WANT TO END THE CALL?<br><br>', {
             buttons: true,
           })
+          botCircle.style.backgroundColor = 'Red'
+          botCircle.classList = "circle"
+
           // endCall.click();
           // clearInterval(intervalId);
         }

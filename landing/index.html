@@ -6,7 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="./images/Synth_Speech.png" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <script src="https://kit.fontawesome.com/7433d3320f.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="./CSS/responsive.css" />
     <title>Synth Speech</title>
@@ -15,7 +18,7 @@
       body {
         margin: 0;
         font-size: 20px;
-        /* background: url('assets/images/peakpx.jpg') center center fixed; */
+        background: url('./images/bg2.jpg') center center fixed;
         background-size: cover;
       }
 
@@ -33,9 +36,9 @@
         left: 50%;
         transform: translate(-50%, -50%);
       }
-      #chat-div{
-        height:fit-content;
-        overflow: scroll;
+      #chat-div {
+        height: fit-content;
+        overflow-y: scroll;
         padding: 0;
         margin: 0;
       }
@@ -107,7 +110,7 @@
         margin-top: 5%;
         display: inline-block;
       }
-      #send-chat-button{
+      #send-chat-button {
         background-color: dimgray;
         color: #fff;
         padding-left: 5px;
@@ -118,6 +121,14 @@
       @media screen and (max-width: 768px) {
         body {
           font-size: 16px; /* Adjust font size for smaller screens */
+        }
+
+        #chat-div {
+          height: 48em !important;
+          display: none;
+          overflow-y: scroll;
+          padding: 0;
+          margin: 0;
         }
 
         .centered,
@@ -153,6 +164,15 @@
         .connect-button-container {
           font-size: 16px;
         }
+
+        .circle {
+          position: absolute;
+          height: 100%;
+          width: 100%;
+          top: 0;
+          left: 0;
+          border-radius: 50%;
+        }
       }
 
       .popup {
@@ -176,6 +196,15 @@
         height: 47em;
         background-color: #f0f0f0;
         transition: right 0.3s ease;
+      }
+
+      .circle {
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 75px;
+        left: 25px;
+        border-radius: 50%;
       }
 
       .chat-header {
@@ -226,13 +255,17 @@
         float: right;
       }
     </style>
-
   </head>
 
   <body>
     <a id="download-link" style="display: none"></a>
     <div id="chat-div" style="background-color: #000">
       <div id="video-chat-container" class="centered video-position" style="display: none">
+        <div class="card" style="z-index: 1000; width: fit-content; background-color: #000">
+          <div class="card-body">
+            <div class="circle" id = "bot-circle" style="background-color: green"></div>
+          </div>
+        </div>
         <img id="local-image" src="assets/images/icons8-male-user-100.png" style="display: none" />
         <video id="local-video" autoplay="autoplay" muted="muted"></video>
         <img id="remote-image" src="assets/images/icons8-male-user-100.png" style="display: none" />
@@ -241,32 +274,39 @@
           Show Webcam
         </button>
         <button id="mute-button" class="btn btn-secondary" style="display: none">Mute</button>
-  
-        <button id="toggle-chat-button" class="btn btn-secondary" style="display: none">TEXTS</button>
+
+        <button id="toggle-chat-button" class="btn btn-secondary" style="display: none">
+          TEXTS
+        </button>
         <button id="end-call-button" class="btn btn-danger" style="display: none">End Call</button>
       </div>
-  
-      <div id="chat-drawer" class="chat-drawer" style="display: none; right: -300px;">
+
+      <div id="chat-drawer" class="chat-drawer" style="display: none; right: -300px">
         <div id="chat-header" class="chat-header">
           <span class="chat-header-title">Chat</span>
           <button id="close-chat-button" class="close-chat-button">&times;</button>
         </div>
         <div id="chat-container" style="display: none">
           <div id="chat-messages-container"></div>
-          <input type="text" id="chat-input" placeholder="Type your message..." style="align-items: center;"/>
+          <input
+            type="text"
+            id="chat-input"
+            placeholder="Type your message..."
+            style="align-items: center"
+          />
           <button id="send-chat-button">Send</button>
         </div>
       </div>
     </div>
-    
+
     <!-- header section  -->
     <header class="text-gray-600 body-font">
       <div class="container mx-auto flex flex-wrap p-5 flex-row md:flex-row items-center">
-        <p style="font-family: 'Times New Roman', Times, serif; font-size: 40px; color: #007bff;">Synth Speech</p>
+        <img src="./images/logo1.png" style="width: 24em; height: 4em" />
       </div>
     </header>
 
-    <section class="text-gray-600 body-font" >
+    <section class="text-gray-600 body-font">
       <div
         class="container mx-auto flex md:px-16 px-5 md:py-24 py-12 md:flex-row flex-col items-center"
         id="room-selection-container"
@@ -310,7 +350,6 @@
               Share a meeting link
             </button>
           </div>
-
         </div>
         <div class="md:max-w-lg md:w-full md:w-1/2 w-5/6 first-image-parent">
           <img
@@ -341,9 +380,9 @@
             Meet Safely Online
           </h1>
           <p class="mb-8 leading-relaxed w-[90%] md:text-lg text-normal text-gray-600 font-normal">
-            Synth Speech secures your information and safeguard
-            your privacy. Video conferences are encrypted in transit, and our array of safety
-            measures are continuously updated for added protection.
+            Synth Speech secures your information and safeguard your privacy. Video conferences are
+            encrypted in transit, and our array of safety measures are continuously updated for
+            added protection.
           </p>
         </div>
         <div class="lg:max-w-lg lg:w-full md:w-1/2 w-5/6">
@@ -370,14 +409,14 @@
         <div
           class="lg:flex-grow md:w-1/2 md:-mt-12 lg:pl-24 md:pl-16 px-5 flex flex-col md:items-start md:text-left items-center text-center"
         >
-          <h1 class="title-font sm:text-4xl text-3xl mb-10 font-medium text-gray-800" >
+          <h1 class="title-font sm:text-4xl text-3xl mb-10 font-medium text-gray-800">
             Synthetic Speech Detection
           </h1>
           <p class="mb-8 leading-relaxed w-[90%] md:text-lg text-normal text-gray-600 font-normal">
-            Detecting synthetic speech requires discerning nuanced patterns, 
-            where spectral irregularities and lack of natural prosody unveil its artificial origin. 
-            Our advanced algorithms scrutinize acoustic signatures, parsing subtle cues to distinguish 
-            synthesized voices from human speech with precision.  <br /><br />
+            Detecting synthetic speech requires discerning nuanced patterns, where spectral
+            irregularities and lack of natural prosody unveil its artificial origin. Our advanced
+            algorithms scrutinize acoustic signatures, parsing subtle cues to distinguish
+            synthesized voices from human speech with precision. <br /><br />
           </p>
         </div>
       </div>
@@ -399,7 +438,6 @@
             web browser—no software to install. On mobile devices, they can join from our custom
             mobile app.
           </p>
-
         </div>
         <div class="lg:max-w-lg lg:w-full md:w-1/2 w-5/6">
           <img
